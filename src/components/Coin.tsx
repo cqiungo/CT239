@@ -1,26 +1,33 @@
 'use client'
 import { useGLTF } from "@react-three/drei"
-import { Canvas, ThreeElements, useFrame } from "@react-three/fiber"
-import React, { useRef, useState } from "react"
+import { useMemo, useEffect } from "react"
 import * as THREE from "three"
+
 function CoinModel({ selected }: { selected: boolean }) {
   const { scene } = useGLTF(
     "https://wayizhojrtgepgaihluv.supabase.co/storage/v1/object/public/my-models/Coin.glb"
   )
 
-  // clone để không sửa trực tiếp vào scene gốc
-  const clonedScene = scene.clone()
+  // Clone scene để mỗi coin độc lập
+  const clonedScene = useMemo(() => scene.clone(), [scene])
 
-  clonedScene.traverse((child: any) => {
-    if (child.isMesh) {
-      child.material = new THREE.MeshStandardMaterial({
-        color: selected ? "hotpink" : "orange",
-      })
-    }
-  })
+  useEffect(() => {
+    clonedScene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.material = new THREE.MeshStandardMaterial({
+          color: selected ? "hotpink" : "orange",
+        })
+      }
+    })
+  }, [clonedScene, selected])
 
-  return <primitive object={clonedScene} scale={0.5} rotation={[Math.PI / 2, 0, 0]} />
+  return (
+    // Scale nhỏ lại (0.5 thay vì 2)
+    <primitive object={clonedScene} scale={0.5} rotation={[Math.PI / 2, 0, 0]} />
+  )
 }
+
+// Coin wrapper
 export default function Coin({
   position,
   selected,
@@ -31,8 +38,15 @@ export default function Coin({
   onClick: () => void
 }) {
   return (
-    <group position={position} onClick={onClick}>
+    <group position={position}>
+      {/* Coin 3D model */}
       <CoinModel selected={selected} />
+
+      {/* Invisible hitbox */}
+      <mesh onClick={onClick}>
+        <cylinderGeometry args={[0.5, 0.5, 0.1, 32]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
     </group>
   )
 }

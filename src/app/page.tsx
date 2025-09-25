@@ -24,19 +24,16 @@ export default function Home() {
     }
 
     // nếu cùng hàng → toggle
-    if (selected.row === row) {
-      setSelected((prev) => {
-        if (!prev) return null
-        const exists = prev.cols.includes(col)
-        return {
-          row,
-          cols: exists ? prev.cols.filter((c) => c !== col) : [...prev.cols, col],
-        }
-      })
-    } else {
-      // khác hàng → reset sang hàng mới
-      setSelected({ row, cols: [col] })
-    }
+setSelected((prev) => {
+  if (!prev || prev.row !== row) {
+    return { row, cols: [col] }
+  }
+  const exists = prev.cols.includes(col)
+  return {
+    row,
+    cols: exists ? prev.cols.filter((c) => c !== col) : [...prev.cols, col],
+  }
+})
   }
 
   const handleConfirm = () => {
@@ -70,7 +67,7 @@ export default function Home() {
               <Coin
                 key={`${row}-${col}`}
                 position={[x, 5.5, z]}
-                selected={isSelected}
+                selected={selected?.row === row && selected.cols.includes(col)}
                 onClick={() => {
                   handleSelect(row, col)
                   console.log(isSelected,`Clicked on item at row ${row}, col ${col}`)
